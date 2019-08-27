@@ -1,0 +1,9 @@
+---
+- name: Fake init playbook for loadBalancers
+  hosts: loadBalancers
+  become: true
+
+  tasks:
+    - name: Debug msg
+      debug:
+        msg: "Fake LB init task is running on {{ ansible_hostname }}"

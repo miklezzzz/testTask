@@ -1,0 +1,10 @@
+---
+- name: Everyone, get Python for free
+  hosts: all
+  become: true
+  gather_facts: false
+
+  tasks:
+    - name: apt-get python-minimal
+      raw: test -e /usr/bin/python || (apt -y update && apt install -y python-minimal)
+

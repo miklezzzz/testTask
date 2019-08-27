@@ -1,0 +1,9 @@
+---
+- name: Install Minio
+  hosts: all
+  become: true
+  gather_facts: false
+
+  roles:
+    - minio
+

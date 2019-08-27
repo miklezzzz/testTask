@@ -1,0 +1,9 @@
+---
+- name: Fake init playbook for backEnds
+  hosts: backEnds
+  become: true
+
+  tasks:
+    - name: Debug msg
+      debug:
+        msg: "Fake BACK init task is running on {{ ansible_hostname }}"
