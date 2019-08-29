@@ -1,0 +1,37 @@
+---
+  - name: Install Keepalived
+    apt:
+      name: keepalived
+      state: present
+      update_cache: yes
+
+  - name: Generate Keepalived auth password
+    shell: date +%s | sha256sum | base64 | head -c 8; sleep 1
+    register: auth_password
+    run_once: true
+    with_sequence: 1-{{ host_count }}
+    delegate_to: localhost
+
+  - name: Get interface name for VRRP
+    shell: ip route show | awk '/10.1.0/ {print $3}'
+    register: interface
+
+  - name: Copy Keepalived.conf
+    template:
+      src: keepalived.conf.j2
+      dest: /etc/keepalived/keepalived.conf
+
+  - name: Enable and start keepalived service
+    systemd:
+      name: keepalived
+      state: reloaded
+      enabled: yes
+
+  - name: Enable nonlocal bind
+    sysctl:
+      name: net.ipv4.ip_nonlocal_bind
+      value: 1
+      sysctl_set: yes
+      state: present
+      reload: yes
+

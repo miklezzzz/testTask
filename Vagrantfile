@@ -7,7 +7,7 @@ Vagrant.configure("2") do |config|
 # N for the number of nodes (lb/backends)
  N = 3
 # MT for the number of Minio's tenants
- MT = 5
+ MT = 2
 # SUBNET for the first three octets of the subnet (like 10.1.0)
  SUBNET = "10.1.0"
  (1..N).each do |i|

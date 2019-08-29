@@ -1,0 +1,38 @@
+global_defs {
+   router_id lb_{{ ansible_hostname }}
+   vrrp_garp_master_refresh 60
+}
+
+vrrp_script chk_nginx {
+    script "pidof nginx && netstat -tulpn | grep nginx | grep 80"
+    interval 5
+}
+
+{% for password in auth_password.results %}
+
+vrrp_instance vi_{{ loop.index }} {
+    interface {{ interface.stdout }}
+    virtual_router_id {{ loop.index }}
+{% if loop.index|string in ansible_hostname %}
+    state MASTER
+    priority 200
+{% else %}
+    state BACKUP
+    priority 100
+{% endif %}
+    advert_int 1
+    authentication {
+        auth_type PASS
+        auth_pass {{ password.stdout }}
+    }
+
+    track_script {
+        chk_nginx
+    }
+
+    virtual_ipaddress {
+        {{ host_subnet }}.3{{ loop.index }}/24 dev {{ interface.stdout }}
+    }
+}
+
+{% endfor %}

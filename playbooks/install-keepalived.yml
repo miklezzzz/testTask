@@ -1,0 +1,9 @@
+---
+- name: Install Keepalived
+  hosts: loadBalancers
+  become: true
+  gather_facts: false
+
+  roles:
+    - keepalived
+
