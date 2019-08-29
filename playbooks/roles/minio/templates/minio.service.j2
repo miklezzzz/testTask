@@ -6,12 +6,13 @@ After=network-online.target
 AssertFileIsExecutable=/usr/sbin/minio
 
 [Service]
-WorkingDirectory=/var/minio
+WorkingDirectory={{ minio_volume }}{{ item }}
+EnvironmentFile=/etc/default/minio-tenant-{{ item }}.env
 
 User=minio
 Group=minio
 
-ExecStart=/usr/sbin/minio server --address :900{{ item }} {{ minio_parameters["stdout"]}}
+ExecStart=/usr/sbin/minio server --address :900{{ item }} {{ minio_parameters.results[item|int-1]["stdout"]}}
 
 # Let systemd restart this service always
 Restart=always

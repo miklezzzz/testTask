@@ -1,0 +1,9 @@
+---
+- name: Install Nginx
+  hosts: loadBalancers
+  become: true
+  gather_facts: false
+
+  roles:
+    - nginx
+

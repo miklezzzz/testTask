@@ -1,0 +1,44 @@
+---
+  - name: Install Nginx
+    apt:
+      name: nginx
+      state: present
+      update_cache: yes
+
+  - name: Get Minio's secrets from files
+    shell: cat /etc/default/minio-tenant-{{ item }}.env | awk -F= '/ACCESS_KEY/ {print $2}'
+    register: minio_access_key
+    run_once: true
+    with_sequence: 1-{{ minio_tenants }}
+
+  - name: Generate list of Nginx backeds
+    shell: for i in $(seq 1 {{ host_count }}); do echo -e "\tserver {{ host_subnet }}.1$i:900{{ item }};";echo -e "\tserver {{ host_subnet }}.2$i:900{{ item }};"; done
+    register: list_of_backends
+    run_once: true
+    delegate_to: localhost
+    with_sequence: 1-{{ minio_tenants }}
+
+  - debug:
+      msg: '{{ list_of_backends.results }}'
+    run_once: true
+
+  - name: Generate list of if attributes
+    shell: for i in $(seq 1 {{ minio_tenants }}); do echo "\t\tif (\$http_authorization ~* \"^AWS4-HMAC-SHA256 Credential=$(cat /etc/default/minio-tenant-$i.env | awk -F= '/ACCESS_KEY/ {print $2}')\") { proxy_pass http://backend$i; }"; done
+    register: list_of_if_attr
+    run_once: true
+
+  - name: Copy nginx.conf file
+    template:
+      src: nginx.conf.j2
+      dest: /etc/nginx/nginx.conf
+
+  - name: Copy nginx default site config file
+    template:
+      src: default.j2
+      dest: /etc/nginx/sites-available/default
+
+  - name: Enable and start nginx service
+    systemd:
+      name: nginx
+      state: reloaded
+      enabled: yes

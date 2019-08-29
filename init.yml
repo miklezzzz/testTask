@@ -7,3 +7,4 @@
 - import_playbook: playbooks/init-lb.yml
 - import_playbook: playbooks/init-back.yml
 - import_playbook: playbooks/install-minio.yml
+- import_playbook: playbooks/install-nginx.yml

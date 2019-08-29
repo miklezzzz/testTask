@@ -8,11 +8,12 @@
 
   - name: Make Minio's data dir
     file:
-      path: /var/minio
+      path: '{{ minio_volume }}{{ item }}'
       state: directory
       owner: minio
       group: minio
       mode: '0760'
+    with_sequence: 1-{{ minio_tenants }}
 
   - name: Download Minio's binary
     get_url:
@@ -22,22 +23,45 @@
       mode: '0740'
 
   - name: Generate Minio parameters
-    shell: for i in $(seq 1 {{ host_count }}); do echo -n "http://{{ host_subnet }}.1$i{{ minio_volume }} http://{{ host_subnet }}.2$i{{ minio_volume }} "; done
+    shell: for i in $(seq 1 {{ host_count }}); do echo -n "http://{{ host_subnet }}.1$i{{ minio_volume }}{{ item }} http://{{ host_subnet }}.2$i{{ minio_volume }}{{ item }} "; done
     register: minio_parameters
+    run_once: true
+    delegate_to: localhost
+    with_sequence: 1-{{ minio_tenants }}
 
-  - debug:
-      msg: '{{ minio_parameters["stdout"] }}'
+  - name: Generate Minio's access keys
+    shell: date +%s | sha256sum | base64 | head -c 32; sleep 1
+    register: access_key
+    run_once: true
+    with_sequence: 1-{{ minio_tenants }}
+    delegate_to: localhost
 
+  - name: Generate Minio's access secrets
+    shell: date +%s | sha256sum | base64 | head -c 32; sleep 1
+    run_once: true
+    register: access_secret
+    with_sequence: 1-{{ minio_tenants }}
+    delegate_to: localhost
+
+  - name: Copy Minio's env file
+    template:
+      src: minio.env.j2
+      dest: /etc/default/minio-tenant-{{ item|int +1 }}.env
+      force: no
+      owner: minio
+      mode: '0600'
+    with_sequence: 0-{{ minio_tenants-1 }}
+     
   - name: Copy systemd Minio unit file
     template:
       src: minio.service.j2
       dest: /lib/systemd/system/minio-tenant-{{ item }}.service
     with_sequence: 1-{{ minio_tenants }}
-     
+
   - name: Reload systemd units
     systemd:
       daemon_reload: yes
       name: minio-tenant-{{ item }}.service
       state: started
     with_sequence: 1-{{ minio_tenants }}
-    
+
