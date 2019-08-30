@@ -13,7 +13,7 @@
     delegate_to: localhost
 
   - name: Get interface name for VRRP
-    shell: ip route show | awk '/10.1.0/ {print $3}'
+    shell: ip route show | awk '/{{ host_subnet }}/ {print $3}'
     register: interface
 
   - name: Copy Keepalived.conf

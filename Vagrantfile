@@ -37,8 +37,7 @@ Vagrant.configure("2") do |config|
 	   "host_subnet" => SUBNET,
            "host_count" => N,
            "minio_volume" => "/var/minio",
-	   "minio_tenants" => MT,
-           nginx_sites: { default: [ "listen 80", "server_name reddit", "location / { proxy_pass http://127.0.0.1:9292; }" ] } 
+	   "minio_tenants" => MT
          }
        end
      end
