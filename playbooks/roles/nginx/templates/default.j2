@@ -13,3 +13,23 @@ server {
         }
 
 }
+
+{% for backends in list_of_backends.results %}
+server {
+	listen 808{{ loop.index }};
+	
+	root /var/www/html;
+	
+	index index.html index.htm index.nginx-debian.html;
+
+	server_name _;
+
+	location / {
+	
+		proxy_set_header Host $http_host;
+		proxy_pass http://backend{{ loop.index }};
+
+	}
+}
+{% endfor %}
+
